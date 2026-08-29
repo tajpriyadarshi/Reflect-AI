@@ -1,0 +1,6 @@
+{
+  "name": "Reflective AI Journal",
+  "description": "A secure, real-time AI-powered journaling companion with Google Authentication, Firestore persistence, and multi-turn conversational context.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
