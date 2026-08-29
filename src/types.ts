@@ -6,6 +6,8 @@ export interface JournalEntry {
   mood?: string;
   tags?: string[];
   pinned?: boolean;
+  entryType?: 'written' | 'spoken';
+  spokenAudioDuration?: number;
 }
 
 export interface UserProfile {

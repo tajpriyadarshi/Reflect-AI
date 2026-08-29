@@ -1,6 +1,6 @@
 # Reflective AI Journal
 
-A secure, production-grade, real-time AI-powered reflective journaling application built with **React 19**, **TypeScript**, **Express**, **Tailwind CSS**, **Google Cloud Firestore**, **Firebase Authentication**, and the **Gemini API** via `@google/genai`.
+A secure, production-grade, real-time AI-powered reflective journaling application built with **React 19**, **TypeScript**, **Express**, **Tailwind CSS**, **Google Cloud Firestore**, **Firebase Authentication**, the **Web Speech API (Speech Recognition & Speech Synthesis)**, and the **Gemini API** via `@google/genai`.
 
 ---
 
@@ -12,6 +12,8 @@ A secure, production-grade, real-time AI-powered reflective journaling applicati
 graph TB
     subgraph Client["Frontend Client (Browser)"]
         UI["React 19 UI & Tailwind CSS"]
+        SpeechIn["Web Speech Recognition (Voice Dictation)"]
+        SpeechOut["Web Speech Synthesis (Spoken AI Reflection)"]
         AuthHook["Firebase Auth (Google OAuth)"]
         JournalHook["useJournal Hook (Firestore Realtime)"]
     end
@@ -29,6 +31,8 @@ graph TB
         SecretMgr["Google Secret Manager (GEMINI_API_KEY)"]
     end
 
+    UI --> SpeechIn
+    UI --> SpeechOut
     UI --> AuthHook
     UI --> JournalHook
     AuthHook <--> FirebaseAuth
@@ -42,18 +46,25 @@ graph TB
 
 ---
 
-### End-to-End Journaling & Reflection Flow
+### End-to-End Journaling & Reflection Flow (Written & Spoken)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as User / Journal Keeper
     participant Client as React Client (Browser)
+    participant Speech as Web Speech API (Mic / Audio)
     participant Server as Express Server (/api/chat)
     participant Gemini as Google Gemini API
     participant Firestore as Cloud Firestore
 
-    User->>Client: Types reflection & selects mood
+    alt Spoken Reflection Mode
+        User->>Speech: Speaks thought into Microphone
+        Speech-->>Client: Emits real-time live transcription
+    else Written Reflection Mode
+        User->>Client: Types reflection & selects mood
+    end
+
     User->>Client: Clicks "Reflect & Save" (Cmd+Enter)
     Client->>Client: Formats last 8 entries as multi-turn conversation
     Client->>Server: POST /api/chat { history, prompt }
@@ -78,7 +89,11 @@ sequenceDiagram
     Client->>Client: sanitizePayload (strip undefined fields)
     Client->>Firestore: addDoc (users/{userId}/journals)
     Firestore-->>Client: Real-time onSnapshot emits updated entries
-    Client->>User: UI displays formatted reflection card in timeline
+
+    opt Auto-read AI reflection aloud (or on Listen click)
+        Client->>Speech: window.speechSynthesis.speak(cleanedMarkdown)
+        Speech-->>User: Calming voice guidance audio playback
+    end
 ```
 
 ---
@@ -115,13 +130,17 @@ sequenceDiagram
     ├── types.ts                     # TypeScript shared interfaces (JournalEntry, MoodType)
     ├── vite-env.d.ts                # TypeScript Vite client types declarations
     ├── index.css                    # Tailwind CSS entrypoint
+    ├── utils/
+    │   └── speech.ts                # Speech synthesis & recognition audio helpers
+    ├── hooks/
+    │   └── useSpeechRecognition.ts  # Real-time voice dictation & microphone hook
     └── components/
         ├── Header.tsx               # Brand header, realtime status, & Google Auth controls
         ├── AuthBanner.tsx           # Security overview & Google Sign-In call to action
-        ├── JournalComposer.tsx      # Reflection input, mood selector, & inspirations
-        ├── JournalEntryCard.tsx     # Markdown reflection renderer, copy, & delete actions
-        ├── JournalFilter.tsx        # Real-time search query and mood filter bar
-        └── JournalStats.tsx         # User statistics (word count, reflection streak, top mood)
+        ├── JournalComposer.tsx      # Written & Spoken reflection input, mood selector, & inspirations
+        ├── JournalEntryCard.tsx     # Markdown reflection renderer, TTS audio player, & actions
+        ├── JournalFilter.tsx        # Search, mood filter, and format selector (Written/Spoken)
+        └── JournalStats.tsx         # User statistics (format mix, words count, streak, top mood)
 ```
 
 ---
@@ -258,30 +277,57 @@ Every user interaction has a defined test case for verification:
    - The interactive stats bar and journal composer activate.
    - Firestore real-time listener binds to `users/{userId}/journals`.
 
-### Test Case 2: Multi-Turn Journal Entry Submission
-1. In the composer textarea, select a mood chip (e.g., *Grateful*, *Reflective*, *Energized*).
-2. Click an inspiration starter or type a reflection (e.g., *"Today I accomplished my primary project milestone and feel energized."*).
-3. Click **"Reflect & Save"** (or press `Cmd/Ctrl + Enter`).
-4. **Verification**: 
+### Test Case 2: Written Reflection Submission
+1. Select the **"Written Reflection"** tab in the composer.
+2. Select a mood chip (e.g., *Grateful*, *Reflective*, *Energized*).
+3. Click an inspiration starter or type a reflection (e.g., *"Today I accomplished my primary project milestone and feel energized."*).
+4. Click **"Reflect & Save"** (or press `Cmd/Ctrl + Enter`).
+5. **Verification**: 
    - A loading indicator displays during model inference.
    - The user input and AI reflection are persisted to Firestore with server timestamps.
-   - The new reflection card appears at the top of the timeline in real time.
+   - The new reflection card appears at the top of the timeline with a *Written* badge.
    - The composer textarea resets cleanly.
 
-### Test Case 3: Error Recovery & Input Preservation
+### Test Case 3: Spoken Reflection & Voice Dictation Flow
+1. Select the **"Spoken Reflection"** tab in the composer.
+2. Tap the large microphone button to start recording.
+3. Speak a reflection aloud into the microphone (e.g., *"I spent a quiet afternoon in the park reflecting on my priorities."*).
+4. Watch the live transcript appear and audio duration timer increment.
+5. Tap the microphone again to finish dictating.
+6. Click **"Save & Reflect"**.
+7. **Verification**: 
+   - Spoken thought is saved with a *Spoken* badge and duration.
+   - If "Read AI reflection aloud" is checked, the browser automatically speaks the AI's response in a calming voice.
+
+### Test Case 4: Text-to-Speech Playback & Speed Controls
+1. On any past journal entry in the timeline, click the **"Listen"** (Speaker) button.
+2. **Verification**: 
+   - The card highlights with an active amber glow and equalizer audio animation.
+   - The companion reads the reflection aloud using SpeechSynthesis.
+   - Clicking `0.9x`, `1.0x`, or `1.2x` dynamically adjusts voice speed.
+   - Clicking **"Playing"** or the mute icon pauses/stops speech immediately.
+
+### Test Case 5: Reflection Format Filtering
+1. In the filter bar, click **"Spoken"**.
+2. **Verification**: Only spoken reflections (tagged with microphone badges) are listed.
+3. Click **"Written"**.
+4. **Verification**: Only written reflections are listed.
+5. Click **"All Entries"** to restore full timeline.
+
+### Test Case 6: Error Recovery & Input Preservation
 1. Disconnect internet or provide an invalid API key.
 2. Attempt to submit a new reflection.
 3. **Verification**: 
    - An accessible error banner appears with a **"Retry Save"** button.
-   - The written text in the textarea is strictly preserved without data loss.
+   - The written or spoken text in the textarea is strictly preserved without data loss.
 
-### Test Case 4: Search & Mood Filtering
+### Test Case 7: Search & Mood Filtering
 1. Type a search keyword into the search bar.
 2. **Verification**: The list updates instantly to display matching reflections and updates the active filter counter.
 3. Click a mood chip filter (e.g., *Grateful*).
 4. **Verification**: Only reflections tagged with *Grateful* are displayed.
 
-### Test Case 5: Copy & Delete Actions
+### Test Case 8: Copy & Delete Actions
 1. Click the **Copy** icon on any reflection card.
 2. **Verification**: A green checkmark icon flashes and the formatted Markdown text is copied to clipboard.
 3. Click the **Delete** (Trash) icon on an entry card and confirm.

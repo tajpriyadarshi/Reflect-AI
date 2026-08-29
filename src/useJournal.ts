@@ -44,8 +44,13 @@ export function useJournal(user: any) {
 
   const sendEntry = async (
     promptText: string,
-    metadata?: { mood?: string; tags?: string[] }
-  ) => {
+    metadata?: {
+      mood?: string;
+      tags?: string[];
+      entryType?: 'written' | 'spoken';
+      spokenAudioDuration?: number;
+    }
+  ): Promise<{ reply: string } | undefined> => {
     if (!user || !promptText.trim()) return;
 
     setIsLoading(true);
@@ -83,10 +88,13 @@ export function useJournal(user: any) {
         reply,
         mood: metadata?.mood || 'Reflective',
         tags: metadata?.tags || ['reflection'],
+        entryType: metadata?.entryType || 'written',
+        spokenAudioDuration: metadata?.spokenAudioDuration || 0,
         createdAt: serverTimestamp(),
       });
 
       await addDoc(collection(db, 'users', user.uid, 'journals'), payload);
+      return { reply };
     } catch (err: any) {
       console.error('Failed to generate or save reflection:', err);
       const message = err?.message || 'Failed to save reflection to Firestore.';

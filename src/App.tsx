@@ -21,6 +21,7 @@ export default function App() {
   // Filtering & search
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMoodFilter, setSelectedMoodFilter] = useState('All');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'written' | 'spoken'>('all');
 
   // Monitor Firebase Authentication state
   useEffect(() => {
@@ -55,12 +56,20 @@ export default function App() {
     }
   };
 
-  const handleSendEntry = async (promptText: string, metadata: { mood: MoodType; tags: string[] }) => {
+  const handleSendEntry = async (
+    promptText: string,
+    metadata: {
+      mood: MoodType;
+      tags: string[];
+      entryType: 'written' | 'spoken';
+      spokenAudioDuration?: number;
+    }
+  ) => {
     if (!user) {
       await handleSignIn();
       return;
     }
-    await sendEntry(promptText, metadata);
+    return await sendEntry(promptText, metadata);
   };
 
   // Filtered entries list
@@ -76,9 +85,14 @@ export default function App() {
         selectedMoodFilter === 'All' ||
         (entry.mood && entry.mood.toLowerCase() === selectedMoodFilter.toLowerCase());
 
-      return matchesSearch && matchesMood;
+      const matchesType =
+        selectedTypeFilter === 'all' ||
+        (selectedTypeFilter === 'written' && (!entry.entryType || entry.entryType === 'written')) ||
+        (selectedTypeFilter === 'spoken' && entry.entryType === 'spoken');
+
+      return matchesSearch && matchesMood && matchesType;
     });
-  }, [entries, searchQuery, selectedMoodFilter]);
+  }, [entries, searchQuery, selectedMoodFilter, selectedTypeFilter]);
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col selection:bg-amber-200 selection:text-amber-900">
@@ -142,6 +156,8 @@ export default function App() {
                 onSearchChange={setSearchQuery}
                 selectedMoodFilter={selectedMoodFilter}
                 onMoodFilterChange={setSelectedMoodFilter}
+                selectedTypeFilter={selectedTypeFilter}
+                onTypeFilterChange={setSelectedTypeFilter}
                 totalCount={entries.length}
                 filteredCount={filteredEntries.length}
               />
