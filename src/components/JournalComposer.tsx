@@ -158,15 +158,16 @@ export const JournalComposer: React.FC<JournalComposerProps> = ({
           </h2>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-stone-100/80 rounded-xl">
+        {/* High-visibility Mode Switcher */}
+        <div className="flex items-center gap-2 p-1 bg-stone-100/90 rounded-xl">
           <button
             id="mode-written-tab"
             type="button"
             onClick={() => handleModeChange('written')}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               mode === 'written'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/50'
+                : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             <PenTool className="w-3.5 h-3.5 text-amber-700" />
@@ -177,132 +178,167 @@ export const JournalComposer: React.FC<JournalComposerProps> = ({
             id="mode-spoken-tab"
             type="button"
             onClick={() => handleModeChange('spoken')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               mode === 'spoken'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-rose-700 hover:text-rose-900 hover:bg-rose-50'
             }`}
           >
-            <Mic className="w-3.5 h-3.5 text-rose-600" />
-            <span>Spoken Reflection</span>
+            <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce' : ''}`} />
+            <span>🎙️ Spoken (Voice Reflection)</span>
+            {isListening && (
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* SPOKEN REFLECTION INTERACTION PANEL */}
-      {mode === 'spoken' && (
-        <div className="mb-4 p-4 rounded-xl bg-gradient-to-br from-rose-50/70 via-stone-50/50 to-amber-50/40 border border-rose-100/90 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+      {/* SPOKEN REFLECTION INTERACTION HERO PANEL */}
+      {mode === 'spoken' ? (
+        <div className="mb-5 p-5 rounded-2xl bg-gradient-to-br from-rose-50 via-amber-50/40 to-stone-50 border-2 border-rose-200/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
               <button
                 id="voice-dictation-toggle-btn"
                 type="button"
                 onClick={toggleListening}
                 disabled={disabled || isLoading}
-                className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full transition-all cursor-pointer shadow-sm ${
+                className={`relative inline-flex items-center justify-center w-16 h-16 rounded-full transition-all cursor-pointer shadow-md ${
                   isListening
-                    ? 'bg-rose-600 text-white ring-4 ring-rose-200 animate-pulse'
-                    : 'bg-stone-900 text-white hover:bg-stone-800'
+                    ? 'bg-rose-600 text-white ring-8 ring-rose-200 scale-105 animate-pulse'
+                    : 'bg-stone-900 text-white hover:bg-stone-800 hover:scale-105'
                 }`}
                 title={isListening ? 'Stop Speaking' : 'Start Speaking'}
               >
                 {isListening ? (
-                  <MicOff className="w-5 h-5" />
+                  <MicOff className="w-7 h-7" />
                 ) : (
-                  <Mic className="w-5 h-5 text-rose-400" />
+                  <Mic className="w-7 h-7 text-rose-300" />
                 )}
               </button>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs sm:text-sm font-medium text-stone-800">
-                    {isListening ? 'Recording voice reflection...' : 'Tap microphone to speak'}
-                  </span>
+                  <h3 className="text-sm sm:text-base font-semibold text-stone-900">
+                    {isListening ? 'Listening to your voice...' : 'Tap the Microphone to Speak'}
+                  </h3>
                   {isListening && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-100 text-rose-800 font-semibold animate-pulse">
-                      <Radio className="w-2.5 h-2.5 text-rose-600" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono bg-rose-600 text-white font-bold animate-pulse">
+                      <Radio className="w-3 h-3" />
                       {formatSeconds(recordingSeconds)}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-stone-500">
+                <p className="text-xs text-stone-600 mt-0.5">
                   {isListening
-                    ? 'Speak freely. Your words are transcribed live below.'
-                    : 'Speak naturally about your day, emotions, or reflections.'}
+                    ? 'Speak freely. Your words are live-transcribed in real time below.'
+                    : 'Share what happened today, feelings you are working through, or quiet gratitude.'}
                 </p>
               </div>
             </div>
 
-            {/* Auto-read response toggle */}
-            {isSpeechSynthesisSupported() && (
-              <label className="inline-flex items-center gap-2 text-xs text-stone-600 bg-white/80 border border-stone-200/80 px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-white transition-colors">
-                <input
-                  type="checkbox"
-                  checked={autoSpeakReply}
-                  onChange={(e) => setAutoSpeakReply(e.target.checked)}
-                  className="rounded text-amber-700 focus:ring-amber-700 w-3.5 h-3.5"
-                />
-                {autoSpeakReply ? (
-                  <Volume2 className="w-3.5 h-3.5 text-amber-700" />
-                ) : (
-                  <VolumeX className="w-3.5 h-3.5 text-stone-400" />
-                )}
-                <span>Read AI reflection aloud</span>
-              </label>
-            )}
+            {/* Quick Action Controls */}
+            <div className="flex items-center gap-2 shrink-0">
+              {isListening ? (
+                <button
+                  type="button"
+                  onClick={stopListening}
+                  className="px-3.5 py-1.5 rounded-xl bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 transition"
+                >
+                  Done Speaking
+                </button>
+              ) : null}
+
+              {/* Auto-read response toggle */}
+              {isSpeechSynthesisSupported() && (
+                <label className="inline-flex items-center gap-2 text-xs text-stone-700 bg-white border border-stone-200 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-stone-50 transition shadow-2xs">
+                  <input
+                    type="checkbox"
+                    checked={autoSpeakReply}
+                    onChange={(e) => setAutoSpeakReply(e.target.checked)}
+                    className="rounded text-amber-700 focus:ring-amber-700 w-3.5 h-3.5"
+                  />
+                  {autoSpeakReply ? (
+                    <Volume2 className="w-3.5 h-3.5 text-amber-700" />
+                  ) : (
+                    <VolumeX className="w-3.5 h-3.5 text-stone-400" />
+                  )}
+                  <span>Read AI reflection aloud</span>
+                </label>
+              )}
+            </div>
           </div>
 
           {/* Equalizer animation when listening */}
           {isListening && (
-            <div className="flex items-center gap-1 justify-center py-1">
-              {[40, 75, 100, 60, 90, 45, 80, 65, 95, 50].map((height, i) => (
+            <div className="flex items-center gap-1.5 justify-center py-2 bg-white/70 rounded-xl border border-rose-100">
+              {[30, 70, 95, 60, 90, 45, 80, 65, 100, 50, 75, 40].map((height, i) => (
                 <div
                   key={i}
-                  className="w-1 bg-rose-500 rounded-full transition-all duration-150 animate-pulse"
+                  className="w-1.5 bg-rose-500 rounded-full transition-all duration-150 animate-pulse"
                   style={{
-                    height: `${Math.max(8, (height * (1 + (i % 3) * 0.2)) / 3)}px`,
-                    animationDelay: `${i * 70}ms`,
+                    height: `${Math.max(10, (height * (1 + (i % 3) * 0.2)) / 3)}px`,
+                    animationDelay: `${i * 60}ms`,
                   }}
                 />
               ))}
             </div>
           )}
 
-          {/* Interim transcript hint */}
+          {/* Interim live speech transcript preview */}
           {interimTranscript && (
-            <div className="text-xs text-rose-700 italic bg-white/60 p-2 rounded-lg border border-rose-200/50">
+            <div className="text-xs text-rose-800 font-medium italic bg-white/80 p-2.5 rounded-xl border border-rose-200">
               "... {interimTranscript}"
             </div>
           )}
 
           {speechError && (
-            <div className="p-2.5 rounded-lg bg-rose-100/80 text-rose-800 text-xs flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <div className="p-3 rounded-xl bg-rose-100 text-rose-900 text-xs flex items-center gap-2 border border-rose-200">
+              <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
               <span>{speechError}</span>
             </div>
           )}
         </div>
-      )}
+      ) : (
+        /* WRITTEN MODE HEADER TOOLBAR: Includes Quick Voice Dictate shortcut */
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          {/* Inspiration Starters */}
+          <div className="flex flex-wrap gap-1.5 items-center">
+            <span className="text-xs text-stone-400 mr-1">Inspirations:</span>
+            {PROMPT_STARTERS.map((starter, i) => (
+              <button
+                key={i}
+                id={`prompt-starter-${i}`}
+                type="button"
+                onClick={() => {
+                  setPrompt(starter + ' ');
+                  onClearError();
+                }}
+                disabled={disabled || isLoading}
+                className="text-xs bg-stone-50 hover:bg-stone-100 text-stone-600 border border-stone-200/80 px-2.5 py-1 rounded-lg transition-colors text-left"
+              >
+                "{starter}"
+              </button>
+            ))}
+          </div>
 
-      {/* Prompt Starters (Active for written or as inspiration) */}
-      {mode === 'written' && (
-        <div className="mb-3 flex flex-wrap gap-1.5 items-center">
-          <span className="text-xs text-stone-400 mr-1">Inspirations:</span>
-          {PROMPT_STARTERS.map((starter, i) => (
-            <button
-              key={i}
-              id={`prompt-starter-${i}`}
-              type="button"
-              onClick={() => {
-                setPrompt(starter + ' ');
-                onClearError();
-              }}
-              disabled={disabled || isLoading}
-              className="text-xs bg-stone-50 hover:bg-stone-100 text-stone-600 border border-stone-200/80 px-2.5 py-1 rounded-lg transition-colors text-left"
-            >
-              "{starter}"
-            </button>
-          ))}
+          {/* Quick Speak Button in Written View */}
+          <button
+            id="quick-dictate-btn"
+            type="button"
+            onClick={() => {
+              handleModeChange('spoken');
+              setTimeout(() => {
+                startListening();
+              }, 50);
+            }}
+            disabled={disabled || isLoading}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer shadow-2xs"
+            title="Switch to Voice Mode & Dictate"
+          >
+            <Mic className="w-3.5 h-3.5 text-rose-600" />
+            <span>Quick Voice Dictate</span>
+          </button>
         </div>
       )}
 
@@ -323,27 +359,54 @@ export const JournalComposer: React.FC<JournalComposerProps> = ({
               disabled
                 ? 'Sign in with Google to record reflections...'
                 : mode === 'spoken'
-                ? 'Your spoken words will appear here. You can also edit before submitting...'
+                ? 'Your spoken words will appear here. You can edit them freely before submitting...'
                 : 'Write your thoughts, emotions, or experiences. Press Cmd/Ctrl + Enter to reflect...'
             }
             className="w-full rounded-xl border border-stone-200 p-3.5 sm:p-4 text-sm sm:text-base text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-700/20 focus:border-amber-700 transition resize-y min-h-[100px] bg-stone-50/50 disabled:bg-stone-100 disabled:cursor-not-allowed"
           />
 
-          {prompt && (
-            <div className="absolute right-3 bottom-3 flex items-center gap-2">
+          {/* Bottom Right Floating Controls */}
+          <div className="absolute right-3 bottom-3 flex items-center gap-2">
+            {/* Direct Microphone Toggle in Corner */}
+            <button
+              id="textarea-mic-button"
+              type="button"
+              onClick={toggleListening}
+              disabled={disabled || isLoading}
+              className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                isListening
+                  ? 'bg-rose-600 text-white border-rose-700 animate-pulse shadow-sm'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border-stone-200 shadow-2xs hover:bg-stone-50'
+              }`}
+              title={isListening ? 'Stop Recording' : 'Dictate with Microphone'}
+            >
+              {isListening ? (
+                <>
+                  <MicOff className="w-3.5 h-3.5" />
+                  <span className="font-mono text-[11px]">{formatSeconds(recordingSeconds)}</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-3.5 h-3.5 text-rose-600" />
+                  <span className="hidden sm:inline text-[11px]">Mic</span>
+                </>
+              )}
+            </button>
+
+            {prompt && (
               <button
                 type="button"
                 onClick={() => {
                   setPrompt('');
                   resetTranscript();
                 }}
-                className="text-[11px] text-stone-400 hover:text-stone-600 bg-white/80 px-2 py-0.5 rounded border border-stone-200 transition-colors"
+                className="text-[11px] text-stone-400 hover:text-stone-600 bg-white px-2 py-1 rounded-lg border border-stone-200 transition-colors"
                 title="Clear input"
               >
                 Clear
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Mood Selector & Submission Action Bar */}

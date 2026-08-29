@@ -28,20 +28,28 @@ export const AuthBanner: React.FC<AuthBannerProps> = ({ onSignIn, isLoading }) =
         </p>
 
         {/* Security & Architecture Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 text-xs text-stone-300">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-xs text-stone-300">
+          <div className="flex items-start gap-2.5 bg-stone-800/60 border border-stone-700/60 rounded-xl p-3">
+            <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+            <div>
+              <span className="font-semibold text-stone-200">Written & Spoken:</span>
+              <p className="text-stone-400 mt-0.5">Dictate reflections with voice in real time or type quietly at your own pace.</p>
+            </div>
+          </div>
+
           <div className="flex items-start gap-2.5 bg-stone-800/60 border border-stone-700/60 rounded-xl p-3">
             <Lock className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div>
               <span className="font-semibold text-stone-200">Owner-Bound Rules:</span>
-              <p className="text-stone-400 mt-0.5">Strict Firestore security rules guarantee only you can read and write your reflections.</p>
+              <p className="text-stone-400 mt-0.5">Strict Firestore rules guarantee only you can read and write your entries.</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5 bg-stone-800/60 border border-stone-700/60 rounded-xl p-3">
             <Database className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div>
-              <span className="font-semibold text-stone-200">Real-Time Firestore Sync:</span>
-              <p className="text-stone-400 mt-0.5">Instant live snapshot listeners sync your reflections across sessions smoothly.</p>
+              <span className="font-semibold text-stone-200">Real-Time Sync:</span>
+              <p className="text-stone-400 mt-0.5">Instant live snapshot listeners sync your thoughts seamlessly.</p>
             </div>
           </div>
         </div>
