@@ -24,7 +24,7 @@ export const AuthBanner: React.FC<AuthBannerProps> = ({ onSignIn, isLoading }) =
         </h2>
 
         <p className="text-stone-300 text-sm sm:text-base leading-relaxed mb-6 font-light">
-          Experience an empathetic journaling companion powered by Gemini and Google Cloud Firestore. Your entries are isolated into your personal, owner-bound Firestore subcollection (`users/{'{userId}'}/journals`), giving you real-time synchronization, multi-turn memory, and total privacy.
+          Experience an empathetic journaling companion powered by Gemini and Google Cloud Firestore. Your reflections are securely isolated and private to your personal account, giving you real-time synchronization, multi-turn memory, and complete privacy.
         </p>
 
         {/* Security & Architecture Highlights */}
